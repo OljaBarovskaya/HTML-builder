@@ -22,7 +22,11 @@ stream.on('data', data2 =>  {
       console.log(err); 
     else { 
       files.forEach(file => {
-        componentsArr.push(file.name);      
+        let currentPath = path.resolve(__dirname, 'components', file.name);
+        let extension = path.extname(currentPath);
+        if(extension === '.html' && file.isFile()){
+          componentsArr.push(file.name);
+        }
       });
     }
       
@@ -52,7 +56,7 @@ fs.readdir(fromPath,  { withFileTypes: true }, (err, filesFrom) => {
         cssArr.push(file.name);
       } 
     })
-    const output = fs.createWriteStream(path.resolve(__dirname, 'project-dist', 'styles.css'));
+    const output = fs.createWriteStream(path.resolve(__dirname, 'project-dist', 'style.css'));
     cssArr.forEach((file) => {
       const input = fs.createReadStream(path.resolve(__dirname, 'styles', file), 'utf-8');
       input.on('data', data => output.write(data));
@@ -61,10 +65,10 @@ fs.readdir(fromPath,  { withFileTypes: true }, (err, filesFrom) => {
 
 let toPath2 = path.resolve(__dirname, 'project-dist', 'assets');
 let fromPath2 = path.resolve(__dirname,  'assets' );
-
-console.log(fromPath2)
  
 let assets = 'assets';
+
+let arrNames = [];
 
 function copyFiles (fromPathCurrent, folderName, toPath){
   console.log(`this one ${fromPathCurrent}`)
@@ -77,7 +81,6 @@ function copyFiles (fromPathCurrent, folderName, toPath){
   if (err) {
     console.log(err);
   } 
-    let arrNames = [];
     filesFrom.forEach(file => {
       if(file.isFile()){
         let fromFullPath = path.join(__dirname,  `${folderName}`, file.name );
@@ -88,11 +91,25 @@ function copyFiles (fromPathCurrent, folderName, toPath){
       } else {
         let currentFolder = `\\${assets}\\${file.name}`;
         let fromPath = path.join(__dirname, currentFolder );
-        
         let toPath = path.join(__dirname, 'project-dist', currentFolder);
         copyFiles(fromPath, currentFolder, toPath);
       }
-    })   
+    }) 
+    fs.readdir(toPath,  { withFileTypes: true }, (err, filesTo) => { 
+      if (err)  
+      {console.log(err);} 
+      filesTo.forEach(file => {
+        if(file.isFile()){
+          if(!arrNames.includes(file.name)){
+            let toFullPath = path.join(__dirname, 'project-dist', folderName, file.name); 
+            fs.unlink(toFullPath,   err => { 
+              if(err) throw err; 
+            }) 
+          } 
+        }
+      }) 
+    })  
 })      
 }
 copyFiles(fromPath2, assets, toPath2)
+
